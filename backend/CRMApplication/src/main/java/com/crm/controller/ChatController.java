@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
+@CrossOrigin(origins = "*")
 @Controller
 public class ChatController {
 
