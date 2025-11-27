@@ -4,7 +4,7 @@ FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
 COPY mvnw .          
-COPY .mvn/ .mvn0
+COPY .mvn/ .mvn
 COPY pom.xml ./
 COPY src ./src
 
