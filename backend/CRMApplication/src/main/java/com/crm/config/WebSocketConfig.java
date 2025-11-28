@@ -14,7 +14,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         // The endpoint clients will connect to
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:4000", "http://localhost") // Updated for consistency
+                .setAllowedOrigins("http://localhost:30080") // Updated for consistency
                 .withSockJS();
     }
 
