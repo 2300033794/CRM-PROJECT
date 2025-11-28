@@ -1,10 +1,11 @@
 package com.crm.config;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -13,6 +14,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 import com.crm.security.JwtAuthenticationFilter;
 
 @Configuration
@@ -21,32 +26,43 @@ public class SecurityConfig {
 
     @Autowired
     private JwtAuthenticationFilter jwtAuthFilter;
-    
+
+    // ✅ PROPER CORS CONFIG (NO "*")
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:30080"));  // ✅ your frontend
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true); // ✅ now valid
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .cors(Customizer.withDefaults())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ IMPORTANT
             .authorizeHttpRequests(auth -> auth
-                // This section lists all endpoints that are publicly accessible without authentication.
                 .requestMatchers(
-                    "/",                    // Allow access to the root URL
+                    "/",
                     "/api/auth/**",
-                    "/v3/api-docs/**",      // Swagger JSON
-                    "/swagger-ui/**",       // Swagger UI
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
                     "/swagger-ui.html",
-                    "/ws/**"                // WebSocket endpoint
+                    "/ws/**"
                 ).permitAll()
-                // This section secures admin-only endpoints.
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                // This section secures customer-only endpoints.
-                .requestMatchers("/api/customers/**", "/api/files/**", "/api/chat/**").hasRole("CUSTOMER")
-                // Any other request that doesn't match the rules above requires authentication.
+                .requestMatchers("/api/customers/**", "/api/files/**", "/api/chat/**")
+                .hasRole("CUSTOMER")
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
-            
+
         return http.build();
     }
 
@@ -60,4 +76,3 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 }
-
