@@ -30,7 +30,7 @@ spec:
             - name: MYSQL_ROOT_PASSWORD
               value: root     # ⚠️ change this for production
             - name: MYSQL_DATABASE
-              value: CRMApplication
+              value: crm_db
           volumeMounts:
             - name: mysql-storage
               mountPath: /var/lib/mysql
